@@ -43,7 +43,6 @@ evalDynFAE env (App f a) = do
 evalDynFAE env (Id id) = do
     v <- (lookup id env)
     Just v
-evalDynFAE _ _ = Nothing
 
 data FAEValue where
   NumV :: Int -> FAEValue
@@ -54,7 +53,31 @@ type Env' = [(String,FAEValue)]
 
 evalStatFAE :: Env' -> FAE -> (Maybe FAEValue)
 evalStatFAE _ _ = Nothing
-
+evalStatFAE _ (Num x) = (Just (NumV x))
+evalStatFAE env (Plus l r) = do
+    l' <- (evalStatFAE env l)
+    r' <- (evalStatFAE env r)
+    case l' of
+        (NumV n1) -> case r' of
+            (NumV n2) -> Just (NumV (n1 + n2))
+            _ -> (Nothing)
+        _ -> (Nothing)
+evalStatFAE env (Minus l r) = do
+    l' <- (evalStatFAE env l)
+    r' <- (evalStatFAE env r)
+    case l' of
+        (NumV n1) -> case r' of
+            (NumV n2) -> Just (NumV (n1 - n2))
+            _ -> (Nothing)
+        _ -> (Nothing)
+evalStatFAE env (Lambda i b) = (Just (ClosureV i b env))
+evalStatFAE env (App f a) = do
+    (ClosureV i b e) <- (evalStatFAE env f)
+    a' <- (evalStatFAE env a)
+    evalStatFAE ((i,a'):env) b
+evalStatFAE env (Id id) = do
+    v <- (lookup id env)
+    Just v
 
 -- FBAE AST and Type Definitions
 
