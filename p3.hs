@@ -18,6 +18,31 @@ data FAE where
 type Env = [(String,FAE)]
 
 evalDynFAE :: Env -> FAE -> (Maybe FAE)
+evalDynFAE _ (Num x) = (Just (Num x))
+evalDynFAE env (Plus l r) = do
+    l' <- (evalDynFAE env l)
+    r' <- (evalDynFAE env r)
+    case l' of
+        (Num n1) -> case r' of
+            (Num n2) -> Just (Num (n1 + n2))
+            _ -> (Nothing)
+        _ -> (Nothing)
+evalDynFAE env (Minus l r) = do
+    l' <- (evalDynFAE env l)
+    r' <- (evalDynFAE env r)
+    case l' of
+        (Num n1) -> case r' of
+            (Num n2) -> Just (Num (n1 - n2))
+            _ -> (Nothing)
+        _ -> (Nothing)
+evalDynFAE _ (Lambda i b) = (Just (Lambda i b))
+evalDynFAE env (App f a) = do
+    (Lambda i b) <- (evalDynFAE env f)
+    a' <- (evalDynFAE env a)
+    evalDynFAE ((i,a'):env) b
+evalDynFAE env (Id id) = do
+    v <- (lookup id env)
+    Just v
 evalDynFAE _ _ = Nothing
 
 data FAEValue where
